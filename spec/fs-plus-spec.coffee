@@ -490,23 +490,35 @@ describe "fs", ->
 
   describe ".getAppDataDirectory", ->
     originalPlatform = null
+    originalHome = null
+    originalAppData = null
 
     beforeEach ->
       originalPlatform = process.platform
+      originalHome = process.env.HOME
+      originalAppData = process.env.APPDATA
 
     afterEach ->
       Object.defineProperty process, 'platform', value: originalPlatform
+      if originalHome?
+        process.env.HOME = originalHome
+      else
+        delete process.env.HOME
+      if originalAppData?
+        process.env.APPDATA = originalAppData
+      else
+        delete process.env.APPDATA
 
     it "returns the Application Support path on Mac", ->
       Object.defineProperty process, 'platform', value: 'darwin'
       unless process.env.HOME
-        Object.defineProperty process.env, 'HOME', value: path.join(path.sep, 'Users', 'Buzz')
+        process.env.HOME = path.join(path.sep, 'Users', 'Buzz')
       expect(fs.getAppDataDirectory()).toBe path.join(fs.getHomeDirectory(), 'Library', 'Application Support')
 
     it "returns %AppData% on Windows", ->
       Object.defineProperty process, 'platform', value: 'win32'
       unless process.env.APPDATA
-        Object.defineProperty process.env, 'APPDATA', value: 'C:\\Users\\test\\AppData\\Roaming'
+        process.env.APPDATA = 'C:\\Users\\test\\AppData\\Roaming'
       expect(fs.getAppDataDirectory()).toBe process.env.APPDATA
 
     it "returns /var/lib on linux", ->
