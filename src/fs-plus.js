@@ -1,11 +1,6 @@
-import fs from 'fs';
-import Module from 'module';
-import path from 'path';
-
-const _ = require('underscore-plus');
-const async = require('async');
-const mkdirp = require('mkdirp');
-const rimraf = require('rimraf');
+const fs = require('fs');
+const Module = require('module');
+const path = require('path');
 
 // Public: Useful extensions to node's built-in fs module
 //
@@ -252,7 +247,7 @@ const fsPlus = {
         return '.' + ext.replace(/^\./, '');
       }
     });
-    return paths.filter(pathToCheck => _.include(extensions, path.extname(pathToCheck)));
+    return paths.filter(pathToCheck => extensions.includes(path.extname(pathToCheck)));
   },
 
   // Public: Get all paths under the given path.
@@ -319,12 +314,12 @@ const fsPlus = {
 
   // Public: Removes the file or directory at the given path synchronously.
   removeSync(pathToRemove) {
-    return rimraf.sync(pathToRemove);
+    return fs.rmSync(pathToRemove, {force: true, maxRetries: 3, recursive: true});
   },
 
   // Public: Removes the file or directory at the given path asynchronously.
   remove(pathToRemove, callback) {
-    return rimraf(pathToRemove, callback);
+    return fs.rm(pathToRemove, {force: true, maxRetries: 3, recursive: true}, callback);
   },
 
   // Public: Open, write, flush, and close a file, writing the given content
@@ -332,7 +327,7 @@ const fsPlus = {
   //
   // It also creates the necessary parent directories.
   writeFileSync(filePath, content, options) {
-    mkdirp.sync(path.dirname(filePath));
+    fs.mkdirSync(path.dirname(filePath), {recursive: true});
     fs.writeFileSync(filePath, content, options);
   },
 
@@ -341,8 +336,8 @@ const fsPlus = {
   //
   // It also creates the necessary parent directories.
   writeFile(filePath, content, options, callback) {
-    callback = _.last(arguments);
-    mkdirp(path.dirname(filePath), (error) => {
+    callback = arguments[arguments.length - 1];
+    fs.mkdir(path.dirname(filePath), {recursive: true}, (error) => {
       if (error != null) {
         callback?.(error)
       } else {
@@ -353,7 +348,7 @@ const fsPlus = {
 
   // Public: Copies the given path asynchronously.
   copy(sourcePath, destinationPath, done) {
-    mkdirp(path.dirname(destinationPath), (error) => {
+    fs.mkdir(path.dirname(destinationPath), {recursive: true}, (error) => {
       if (error != null) {
         done?.(error);
         return;
@@ -384,7 +379,7 @@ const fsPlus = {
     // We need to save the sources before creaing the new directory to avoid
     // infinitely creating copies of the directory when copying inside itself
     const sources = fs.readdirSync(sourcePath);
-    mkdirp.sync(destinationPath);
+    fs.mkdirSync(destinationPath, {recursive: true});
       for (let source of sources) {
         const sourceFilePath = path.join(sourcePath, source);
         const destinationFilePath = path.join(destinationPath, source);
@@ -407,7 +402,7 @@ const fsPlus = {
   //   when reading from and writing to disk. The default is 16KB.
   copyFileSync(sourceFilePath, destinationFilePath, bufferSize) {
     if (bufferSize == null) { bufferSize = 16 * 1024; }
-    mkdirp.sync(path.dirname(destinationFilePath));
+    fs.mkdirSync(path.dirname(destinationFilePath), {recursive: true});
 
     let readFd = null;
     let writeFd = null;
@@ -417,7 +412,7 @@ const fsPlus = {
       let bytesRead = 1;
       let position = 0;
       while (bytesRead > 0) {
-        const buffer = new Buffer(bufferSize);
+        const buffer = Buffer.alloc(bufferSize);
         bytesRead = fs.readSync(readFd, buffer, 0, buffer.length, position);
         fs.writeSync(writeFd, buffer, 0, bytesRead, position);
         position += bytesRead;
@@ -431,7 +426,9 @@ const fsPlus = {
   // Public: Create a directory at the specified path including any missing
   // parent directories synchronously.
   makeTreeSync(directoryPath) {
-    if (!fsPlus.isDirectorySync(directoryPath)) { mkdirp.sync(directoryPath); }
+    if (!fsPlus.isDirectorySync(directoryPath)) {
+      fs.mkdirSync(directoryPath, {recursive: true});
+    }
   },
 
   // Public: Create a directory at the specified path including any missing
@@ -439,7 +436,7 @@ const fsPlus = {
   makeTree(directoryPath, callback) {
     fsPlus.isDirectory(directoryPath, (exists) => {
       if (exists) { return callback?.(); }
-      mkdirp(directoryPath, error => callback?.(error));
+      fs.mkdir(directoryPath, {recursive: true}, error => callback?.(error));
     });
   },
 
@@ -489,43 +486,37 @@ const fsPlus = {
   // onDirectory - The {Function} to execute on each directory, receives a single
   //               argument the absolute path (defaults to onFile).
   traverseTree(rootPath, onFile, onDirectory, onDone) {
+    if (onDirectory == null) { onDirectory = onFile; }
     return fs.readdir(rootPath, (error, files) => {
       if (error) {
         return onDone?.()
-      } else {
-        let queue = async.queue((childPath, callback) =>
-          fs.stat(childPath, (error, stats) => {
-            if (error) {
-              return callback(error);
-            } else if (stats.isFile()) {
-              onFile(childPath);
-              return callback();
-            } else if (stats.isDirectory()) {
-              if (onDirectory(childPath)) {
-                return fs.readdir(childPath, (error, files) => {
-                  if (error) {
-                    return callback(error);
-                  } else {
-                    for (let file of files) {
-                      queue.unshift(path.join(childPath, file));
-                    }
-                    return callback();
-                  }
-                });
-              } else {
-                return callback();
-              }
-            } else {
-              return callback();
-            }
-          })
-        );
-        queue.concurrency = 1;
-        queue.drain = onDone;
-        for (let file of files) {
-          queue.push(path.join(rootPath, file));
-        }
       }
+
+      const queue = files.map(file => path.join(rootPath, file));
+      const visitNext = () => {
+        const childPath = queue.shift();
+        if (childPath == null) { return onDone?.(); }
+
+        return fs.stat(childPath, (statError, stats) => {
+          if (statError) { return visitNext(); }
+          if (stats.isFile()) {
+            onFile(childPath);
+            return visitNext();
+          }
+          if (!stats.isDirectory() || !onDirectory(childPath)) {
+            return visitNext();
+          }
+
+          return fs.readdir(childPath, (readError, children) => {
+            if (!readError) {
+              queue.unshift(...children.map(file => path.join(childPath, file)));
+            }
+            return visitNext();
+          });
+        });
+      };
+
+      return visitNext();
     });
   },
 
@@ -551,7 +542,7 @@ const fsPlus = {
   // undefined otherwise.
   resolve(...args) {
     let extensions;
-    if (_.isArray(_.last(args))) { extensions = args.pop(); }
+    if (Array.isArray(args[args.length - 1])) { extensions = args.pop(); }
     const pathToResolve = args.pop()?.toString();
     const loadPaths = args;
 

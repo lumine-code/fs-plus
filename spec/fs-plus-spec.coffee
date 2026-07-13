@@ -1,5 +1,5 @@
 path = require 'path'
-temp = require 'temp'
+temp = require './helpers/temp'
 fs = require '../lib/fs-plus'
 
 temp.track()
@@ -11,6 +11,10 @@ describe "fs", ->
   try
     fs.unlinkSync(linkToSampleFile)
   fs.symlinkSync(sampleFile, linkToSampleFile, 'junction')
+
+  afterAll ->
+    try
+      fs.unlinkSync(linkToSampleFile)
 
   describe ".isFileSync(path)", ->
     it "returns true with a file path", ->
@@ -39,35 +43,35 @@ describe "fs", ->
     it "calls back with true for a symbolic link path", ->
       callback = jasmine.createSpy('isSymbolicLink')
       fs.isSymbolicLink(linkToSampleFile, callback)
-      waitsFor -> callback.callCount is 1
-      runs -> expect(callback.mostRecentCall.args[0]).toBe true
+      waitsFor -> callback.calls.count() is 1
+      runs -> expect(callback.calls.mostRecent().args[0]).toBe true
 
     it "calls back with false for a file path", ->
       callback = jasmine.createSpy('isSymbolicLink')
       fs.isSymbolicLink(sampleFile, callback)
-      waitsFor -> callback.callCount is 1
-      runs -> expect(callback.mostRecentCall.args[0]).toBe false
+      waitsFor -> callback.calls.count() is 1
+      runs -> expect(callback.calls.mostRecent().args[0]).toBe false
 
     it "calls back with false for a non-existent path", ->
       callback = jasmine.createSpy('isSymbolicLink')
 
       fs.isSymbolicLink(path.join(fixturesDir,  'non-existent'), callback)
-      waitsFor -> callback.callCount is 1
+      waitsFor -> callback.calls.count() is 1
       runs ->
-        expect(callback.mostRecentCall.args[0]).toBe false
+        expect(callback.calls.mostRecent().args[0]).toBe false
 
-        callback.reset()
+        callback.calls.reset()
         fs.isSymbolicLink('', callback)
 
-      waitsFor -> callback.callCount is 1
+      waitsFor -> callback.calls.count() is 1
       runs ->
-        expect(callback.mostRecentCall.args[0]).toBe false
+        expect(callback.calls.mostRecent().args[0]).toBe false
 
-        callback.reset()
+        callback.calls.reset()
         fs.isSymbolicLink(null, callback)
 
-      waitsFor -> callback.callCount is 1
-      runs -> expect(callback.mostRecentCall.args[0]).toBe false
+      waitsFor -> callback.calls.count() is 1
+      runs -> expect(callback.calls.mostRecent().args[0]).toBe false
 
   describe ".existsSync(path)", ->
     it "returns true when the path exists", ->
@@ -164,19 +168,19 @@ describe "fs", ->
       fs.makeTree(abcPath, callback)
 
       waitsFor ->
-        callback.callCount is 1
+        callback.calls.count() is 1
 
       runs ->
-        expect(callback.argsForCall[0][0]).toBeNull()
+        expect(callback.calls.allArgs()[0][0]).toBeNull()
         expect(fs.isDirectorySync(abcPath)).toBeTruthy()
 
         fs.makeTree(abcPath, callback)
 
       waitsFor ->
-        callback.callCount is 2
+        callback.calls.count() is 2
 
       runs ->
-        expect(callback.argsForCall[1][0]).toBeUndefined()
+        expect(callback.calls.allArgs()[1][0]).toBeUndefined()
         expect(fs.isDirectorySync(abcPath)).toBeTruthy()
 
     it "calls back with an error when the provided path is a file", ->
@@ -189,13 +193,13 @@ describe "fs", ->
       fs.makeTree(filePath, callback)
 
       waitsFor ->
-        callback.callCount is 1
+        callback.calls.count() is 1
 
       runs ->
-        expect(callback.argsForCall[0][0]).toBeTruthy()
-        expect(callback.argsForCall[0][1]).toBeUndefined()
-        expect(callback.argsForCall[0][0].code).toBe 'EEXIST'
-        expect(callback.argsForCall[0][0].path).toBe filePath
+        expect(callback.calls.allArgs()[0][0]).toBeTruthy()
+        expect(callback.calls.allArgs()[0][1]).toBeUndefined()
+        expect(callback.calls.allArgs()[0][0].code).toBe 'EEXIST'
+        expect(callback.calls.allArgs()[0][0].path).toBe filePath
 
   describe ".traverseTreeSync(path, onFile, onDirectory)", ->
     it "calls fn for every path in the tree at the given path", ->
@@ -310,6 +314,7 @@ describe "fs", ->
         expect(symlinkPaths).toEqual(paths)
 
     it "ignores missing symlinks", ->
+      return if process.platform is 'win32'
       directory = temp.mkdirSync('symlink-in-here')
       paths = []
       onPath = (childPath) -> paths.push(childPath)
@@ -390,6 +395,7 @@ describe "fs", ->
         expect(symlinkPaths).toEqual(paths)
 
     it "ignores missing symlinks", ->
+      return if process.platform is 'win32'
       directory = temp.mkdirSync('symlink-in-here')
       paths = []
       onPath = (childPath) -> paths.push(childPath)
@@ -539,7 +545,7 @@ describe "fs", ->
       fs.writeFile(file, 'contents', handler)
 
       waitsFor ->
-        handler.callCount is 1
+        handler.calls.count() is 1
 
       runs ->
         expect(fs.readFileSync(file, 'utf8')).toBe 'contents'
@@ -714,11 +720,11 @@ describe "fs", ->
       fs.move(directoryPath, newDirectoryPath, callback)
 
       waitsFor ->
-        callback.callCount is 1
+        callback.calls.count() is 1
 
       runs ->
-        expect(callback.argsForCall[0][0]).toBeTruthy()
-        expect(callback.argsForCall[0][0].code).toBe 'ENOENT'
+        expect(callback.calls.allArgs()[0][0]).toBeTruthy()
+        expect(callback.calls.allArgs()[0][0].code).toBe 'ENOENT'
 
     it 'calls back with an error if the target already exists', ->
       callback = jasmine.createSpy('callback')
@@ -730,11 +736,11 @@ describe "fs", ->
       fs.move(directoryPath, newDirectoryPath, callback)
 
       waitsFor ->
-        callback.callCount is 1
+        callback.calls.count() is 1
 
       runs ->
-        expect(callback.argsForCall[0][0]).toBeTruthy()
-        expect(callback.argsForCall[0][0].code).toBe 'EEXIST'
+        expect(callback.calls.allArgs()[0][0]).toBeTruthy()
+        expect(callback.calls.allArgs()[0][0].code).toBe 'EEXIST'
 
     it 'renames if the target just has different letter casing', ->
       callback = jasmine.createSpy('callback')
@@ -745,7 +751,7 @@ describe "fs", ->
       fs.move(directoryPath, newDirectoryPath, callback)
 
       waitsFor ->
-        callback.callCount is 1
+        callback.calls.count() is 1
 
       runs ->
         # If the filesystem is case-insensitive, the old directory should still exist.
@@ -761,7 +767,7 @@ describe "fs", ->
       fs.move(directoryPath, newDirectoryPath, callback)
 
       waitsFor ->
-        callback.callCount is 1
+        callback.calls.count() is 1
 
       runs ->
         expect(fs.existsSync(directoryPath)).toBe false
@@ -776,7 +782,7 @@ describe "fs", ->
       fs.move(directoryPath, newDirectoryPath, callback)
 
       waitsFor ->
-        callback.callCount is 1
+        callback.calls.count() is 1
 
       runs ->
         expect(fs.existsSync(directoryPath)).toBe false
@@ -791,7 +797,7 @@ describe "fs", ->
       fs.move(filePath, newFilePath, callback)
 
       waitsFor ->
-        callback.callCount is 1
+        callback.calls.count() is 1
 
       runs ->
         expect(fs.existsSync(filePath)).toBe false

@@ -1,21 +1,30 @@
-# fs plus
-[![CI](https://github.com/atom/fs-plus/actions/workflows/ci.yml/badge.svg)](https://github.com/atom/fs-plus/actions/workflows/ci.yml)
+# @lumine-code/fs-plus
 
-Yet another filesystem helper based on node's [fs](http://nodejs.org/api/fs.html)
-module.  This library exports everything from node's fs module but with some
-extra helpers.
+Extends Node.js filesystem APIs with cross-platform helpers used by Lumine packages.
 
-## Using
+## Features
+
+- **Complete filesystem API**: exposes Node.js `fs` methods together with additional helpers.
+- **Cross-platform paths**: handles home paths, executable checks, and filesystem case sensitivity.
+- **Safe file operations**: creates parent directories and recursively copies, moves, or removes trees.
+- **Filesystem discovery**: lists and traverses trees, resolves extensions, and classifies common file types.
+
+## Installation
 
 ```sh
-npm install fs-plus
+npm install @lumine-code/fs-plus
 ```
 
-```coffee
-fs = require 'fs-plus'
+## Usage
+
+```js
+const fs = require('@lumine-code/fs-plus')
+
+fs.makeTreeSync('path/to/directory')
+fs.writeFileSync('path/to/directory/file.txt', 'content')
 ```
 
-## Documentation
+## API
 
 ### `getHomeDirectory()`
 Returns the absolute path to the home directory.
@@ -239,3 +248,14 @@ Returns `fs.Stats` if the file exists, `false` otherwise.
 ### `lstatSyncNoException(path[, options])`
 Calls [`fs.lstatSync`](https://nodejs.org/docs/latest-v10.x/api/fs.html#fs_fs_lstatsync_path_options), catching all exceptions raised. This method calls `fs.lstatSyncNoException` when provided by the underlying `fs` module (Electron < 3.0).
 Returns `fs.Stats` if the file exists, `false` otherwise.
+
+## Building
+
+```sh
+npm install
+npm test
+```
+
+## Contributing
+
+Got ideas to make this package better, found a bug, or want to help add new features? Just drop your thoughts on GitHub. Any feedback is welcome!
