@@ -23,7 +23,10 @@
   "keywords": [
     "fs",
     "filesystem",
-    "utilities",
+    "node",
+    "path",
+    "cross-platform",
+    "file",
     "lumine"
   ],
   "files": [
