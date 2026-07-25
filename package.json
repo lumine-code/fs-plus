@@ -1,7 +1,7 @@
 {
   "name": "@lumine-code/fs-plus",
   "version": "4.0.0",
-  "description": "Extends Node.js filesystem APIs with cross-platform helpers used by Lumine packages.",
+  "description": "Extends Node.js filesystem APIs with cross-platform helpers.",
   "main": "./lib/fs-plus.js",
   "scripts": {
     "build": "node scripts/build.js",

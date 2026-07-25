@@ -1,6 +1,6 @@
-# @lumine-code/fs-plus
+# fs-plus
 
-Extends Node.js filesystem APIs with cross-platform helpers used by Lumine packages.
+Extends Node.js filesystem APIs with cross-platform helpers.
 
 ## Features
 
