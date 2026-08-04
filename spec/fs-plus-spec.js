@@ -859,7 +859,7 @@ describe("fs", function() {
       var pathToLeaveAlone, urlToLeaveAlone;
       urlToLeaveAlone = "https://atom.io/something/fun?abc";
       expect(fs.tildify(urlToLeaveAlone)).toBe(urlToLeaveAlone);
-      pathToLeaveAlone = "/Library/Support/Atom/State";
+      pathToLeaveAlone = "/Library/Support/Lumine/State";
       return expect(fs.tildify(pathToLeaveAlone)).toBe(pathToLeaveAlone);
     });
   });
