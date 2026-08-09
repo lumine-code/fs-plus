@@ -903,7 +903,7 @@ describe("fs", function () {
     });
     return it("doesn't change URLs or paths not tildified", function () {
       var pathToLeaveAlone, urlToLeaveAlone;
-      urlToLeaveAlone = "https://atom.io/something/fun?abc";
+      urlToLeaveAlone = "https://example.com/something/fun?abc";
       expect(fs.tildify(urlToLeaveAlone)).toBe(urlToLeaveAlone);
       pathToLeaveAlone = "/Library/Support/Lumine/State";
       return expect(fs.tildify(pathToLeaveAlone)).toBe(pathToLeaveAlone);
