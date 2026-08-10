@@ -1134,12 +1134,59 @@ describe("fs", function () {
       return expect(fs.isPdfExtension(".PDF")).toBe(true);
     });
   });
-  return describe(".isReadmePath", function () {
+  describe(".isReadmePath", function () {
     it("returns true for a recognized README path", function () {
       return expect(fs.isReadmePath("./path/to/README.md")).toBe(true);
     });
     return it("returns false for non README path", function () {
       return expect(fs.isReadmePath("./path/foo.txt")).toBe(false);
+    });
+  });
+
+  // The module is a proxy over node's fs plus its own additions. Reads and
+  // writes were the only traps it answered, so it reported no own properties at
+  // all -- and a spy library, asking that question to decide how to put a method
+  // back, concluded the method was inherited and "restored" it by deleting an
+  // override the proxy target never held. The double survived the spec that
+  // installed it and every later caller got it.
+  return describe("property reflection", function () {
+    it("reports its own and node's methods as own properties", function () {
+      expect(Object.hasOwn(fs, "isFileSync")).toBe(true);
+      expect(Object.hasOwn(fs, "readFileSync")).toBe(true);
+      expect(Object.keys(fs)).toContain("isFileSync");
+      expect(Object.keys(fs)).toContain("readFileSync");
+      expect("isFileSync" in fs).toBe(true);
+      expect("nothingDefinesThis" in fs).toBe(false);
+    });
+
+    it("describes a method with a configurable, writable descriptor", function () {
+      var descriptor = Object.getOwnPropertyDescriptor(fs, "existsSync");
+      expect(typeof descriptor.value).toBe("function");
+      expect(descriptor.writable).toBe(true);
+      expect(descriptor.configurable).toBe(true);
+    });
+
+    it("takes a replaced method back off again", function () {
+      var original = fs.existsSync;
+      var replacement = function () {
+        return "replaced";
+      };
+
+      fs.existsSync = replacement;
+      expect(fs.existsSync).toBe(replacement);
+
+      fs.existsSync = original;
+      expect(fs.existsSync).toBe(original);
+      expect(fs.existsSync(__filename)).toBe(true);
+    });
+
+    return it("drops a property that is deleted again", function () {
+      fs.aPropertyNothingElseDefines = 1;
+      expect(Object.hasOwn(fs, "aPropertyNothingElseDefines")).toBe(true);
+
+      delete fs.aPropertyNothingElseDefines;
+      expect(Object.hasOwn(fs, "aPropertyNothingElseDefines")).toBe(false);
+      expect(fs.aPropertyNothingElseDefines).toBeUndefined();
     });
   });
 });

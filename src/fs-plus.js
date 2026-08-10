@@ -903,19 +903,59 @@ let isMoveTargetValidSync = function (source, target) {
   );
 };
 
+// Which of the two objects answers for a key: this module's own additions win,
+// and everything else comes from node's fs.
+const ownerOf = (key) => (Object.hasOwn(fsPlus, key) ? fsPlus : fs);
+
+// The exported object is a proxy so that node's fs surface stays live: a
+// property added to `fs` by a later node release, or by a caller, is visible
+// here without this module listing it.
+//
+// Reflection has to be answered too, not just reads and writes. With only `get`
+// and `set` the traps fall through to the empty target, so the module reports no
+// own properties at all -- `Object.keys` comes back empty and
+// `Object.getOwnPropertyDescriptor` undefined. That is not merely cosmetic:
+// a test double installed on this module can never be taken off again, because
+// every spy library decides how to restore by asking whether the property was an
+// own property first, concludes it was inherited, and restores by deleting an
+// override the target never held. The double then outlives its test and every
+// later caller gets it.
 module.exports = new Proxy(
   {},
   {
     get(target, key) {
-      if (Object.hasOwn(fsPlus, key)) {
-        return fsPlus[key];
-      } else {
-        return fs[key];
-      }
+      return ownerOf(key)[key];
     },
 
     set(target, key, value) {
-      return (fsPlus[key] = value);
+      fsPlus[key] = value;
+      return true;
+    },
+
+    has(target, key) {
+      return Object.hasOwn(fsPlus, key) || key in fs;
+    },
+
+    ownKeys() {
+      return [...new Set([...Reflect.ownKeys(fs), ...Reflect.ownKeys(fsPlus)])];
+    },
+
+    getOwnPropertyDescriptor(target, key) {
+      const descriptor = Object.getOwnPropertyDescriptor(ownerOf(key), key);
+      if (descriptor == null) return undefined;
+      // A proxy may not report a property as non-configurable unless the target
+      // really owns it, and the target here owns nothing.
+      return { ...descriptor, configurable: true };
+    },
+
+    defineProperty(target, key, descriptor) {
+      Object.defineProperty(fsPlus, key, descriptor);
+      return true;
+    },
+
+    deleteProperty(target, key) {
+      delete fsPlus[key];
+      return true;
     },
   },
 );
