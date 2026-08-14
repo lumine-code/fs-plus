@@ -32,30 +32,23 @@ Returns the absolute path to the home directory.
 
 ### `absolute(relativePath)`
 
-Make the given path absolute by resolving it against the current
-working directory.
+Make the given path absolute by resolving it against the current working directory.
 
 ### Params
 
-- **String** `relativePath`: The string representing the relative path. If the
-  path is prefixed with '~', it will be expanded to the current user's home
-  directory.
+- **String** `relativePath`: The string representing the relative path. If the path is prefixed with '~', it will be expanded to the current user's home directory.
 
 ### Return
 
-- **String**: The absolute path or the relative path if it's unable to
-  determine its real path.
+- **String**: The absolute path or the relative path if it's unable to determine its real path.
 
 ### `normalize(pathToNormalize)`
 
-Normalize the given path treating a leading `~` segment as referring to the
-home directory. This method does not query the filesystem.
+Normalize the given path treating a leading `~` segment as referring to the home directory. This method does not query the filesystem.
 
 #### Params
 
-- **String** `pathToNormalize`: The string containing the abnormal path. If the
-  path is prefixed with '~', it will be expanded to the current user's home
-  directory.
+- **String** `pathToNormalize`: The string containing the abnormal path. If the path is prefixed with '~', it will be expanded to the current user's home directory.
 
 #### Return
 
@@ -63,8 +56,7 @@ home directory. This method does not query the filesystem.
 
 ### `tildify(pathToTildify)`
 
-Convert an absolute path to tilde path on Linux and macOS:
-/Users/username/dev => ~/dev
+Convert an absolute path to tilde path on Linux and macOS: /Users/username/dev => ~/dev
 
 #### Params
 
@@ -132,14 +124,12 @@ Returns the size of the specified path.
 
 ### `listSync(rootPath, extensions)`
 
-Returns an Array with the paths of the files and directories
-contained within the directory path. It is not recursive.
+Returns an Array with the paths of the files and directories contained within the directory path. It is not recursive.
 
 ## Params
 
 - **String** `rootPath`: The absolute path to the directory to list.
-- **Array** `extensions`: An array of extensions to filter the results by. If none are
-  given, none are filtered (optional).
+- **Array** `extensions`: An array of extensions to filter the results by. If none are given, none are filtered (optional).
 
 ### `list(rootPath, extensions)`
 
@@ -167,14 +157,11 @@ Removes the file or directory at the given path synchronously.
 
 ### `writeFileSync(filePath, content, options)`
 
-Open, write, flush, and close a file, writing the given content synchronously.
-It also creates the necessary parent directories.
+Open, write, flush, and close a file, writing the given content synchronously. It also creates the necessary parent directories.
 
 ### `writeFile(filePath, content, options, callback)`
 
-Open, write, flush, and close a file, writing the given content
-asynchronously.
-It also creates the necessary parent directories.
+Open, write, flush, and close a file, writing the given content asynchronously. It also creates the necessary parent directories.
 
 ### `copySync(sourcePath, destinationPath)`
 
@@ -182,33 +169,25 @@ Copies the given path recursively and synchronously.
 
 ### `makeTreeSync(directoryPath)`
 
-Create a directory at the specified path including any missing
-parent directories synchronously.
+Create a directory at the specified path including any missing parent directories synchronously.
 
 ### `makeTree(directoryPath, callback)`
 
-Create a directory at the specified path including any missing
-parent directories asynchronously.
+Create a directory at the specified path including any missing parent directories asynchronously.
 
 ### `traverseTreeSync(rootPath, onFile, onDirectory)`
 
-Recursively walk the given path and execute the given functions
-synchronously.
+Recursively walk the given path and execute the given functions synchronously.
 
 #### Params
 
 - **String** `rootPath`: The string containing the directory to recurse into.
-- **Function** `onFile`: The function to execute on each file, receives a single argument
-  the absolute path.
-- **Function** `onDirectory`: The function to execute on each directory, receives a single
-  argument the absolute path (defaults to onFile). If this
-  function returns a falsy value then the directory is not
-  entered.
+- **Function** `onFile`: The function to execute on each file, receives a single argument the absolute path.
+- **Function** `onDirectory`: The function to execute on each directory, receives a single argument the absolute path (defaults to onFile). If this function returns a falsy value then the directory is not entered.
 
 ### `traverseTree(rootPath, onFile, onDirectory, onDone)`
 
-Public: Recursively walk the given path and execute the given functions
-asynchronously.
+Public: Recursively walk the given path and execute the given functions asynchronously.
 
 ### `md5ForPath(pathToDigest)`
 
@@ -230,35 +209,28 @@ Finds a relative path among the given array of paths.
 
 - **Array** `loadPaths`: An array of absolute and relative paths to search.
 - **String** `pathToResolve` The string containing the path to resolve.
-- **Array** `extensions` An array of extensions to pass to {resolveExtensions} in
-  which case pathToResolve should not contain an extension
-  (optional).
+- **Array** `extensions` An array of extensions to pass to {resolveExtensions} in which case pathToResolve should not contain an extension (optional).
 
 #### Return
 
-Returns the absolute path of the file to be resolved if it's found and
-undefined otherwise.
+Returns the absolute path of the file to be resolved if it's found and undefined otherwise.
 
 ### `resolveOnLoadPath()`
 
-Like `.resolve` but uses node's modules paths as the load paths to
-search.
+Like `.resolve` but uses node's modules paths as the load paths to search.
 
 ### `resolveExtension(pathToResolve, extensions)`
 
-Finds the first file in the given path which matches the extension
-in the order given.
+Finds the first file in the given path which matches the extension in the order given.
 
 #### Params
 
-- **String** `pathToResolve`: the string containing relative or absolute path of the
-  file in question without the extension or '.'.
+- **String** `pathToResolve`: the string containing relative or absolute path of the file in question without the extension or '.'.
 - **Array** `extensions`: the ordered array of extensions to try.
 
 #### Return
 
-Returns the absolute path of the file if it exists with any of the given
-extensions, otherwise it's undefined.
+Returns the absolute path of the file if it exists with any of the given extensions, otherwise it's undefined.
 
 ### `isCompressedExtension(ext)`
 
@@ -286,23 +258,19 @@ Returns true for extensions associated with Markdown files.
 
 ### `isCaseInsensitive()`
 
-Is the filesystem case insensitive?
-Returns `true` if case insensitive, `false` otherwise.
+Is the filesystem case insensitive? Returns `true` if case insensitive, `false` otherwise.
 
 ### `isCaseSensitive()`
 
-Is the filesystem case sensitive?
-Returns `true` if case sensitive, `false` otherwise.
+Is the filesystem case sensitive? Returns `true` if case sensitive, `false` otherwise.
 
 ### `statSyncNoException(path[, options])`
 
-Calls [`fs.statSync`](https://nodejs.org/docs/latest-v10.x/api/fs.html#fs_fs_statsync_path_options), catching all exceptions raised. This method calls `fs.statSyncNoException` when provided by the underlying `fs` module (Electron < 3.0).
-Returns `fs.Stats` if the file exists, `false` otherwise.
+Calls [`fs.statSync`](https://nodejs.org/docs/latest-v10.x/api/fs.html#fs_fs_statsync_path_options), catching all exceptions raised. This method calls `fs.statSyncNoException` when provided by the underlying `fs` module (Electron < 3.0). Returns `fs.Stats` if the file exists, `false` otherwise.
 
 ### `lstatSyncNoException(path[, options])`
 
-Calls [`fs.lstatSync`](https://nodejs.org/docs/latest-v10.x/api/fs.html#fs_fs_lstatsync_path_options), catching all exceptions raised. This method calls `fs.lstatSyncNoException` when provided by the underlying `fs` module (Electron < 3.0).
-Returns `fs.Stats` if the file exists, `false` otherwise.
+Calls [`fs.lstatSync`](https://nodejs.org/docs/latest-v10.x/api/fs.html#fs_fs_lstatsync_path_options), catching all exceptions raised. This method calls `fs.lstatSyncNoException` when provided by the underlying `fs` module (Electron < 3.0). Returns `fs.Stats` if the file exists, `false` otherwise.
 
 ## Building
 
