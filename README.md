@@ -2,6 +2,8 @@
 
 Extends Node.js filesystem APIs with cross-platform helpers.
 
+Fork of [pulsar-edit/fs-plus](https://github.com/pulsar-edit/fs-plus).
+
 ## Features
 
 - **Complete filesystem API**: exposes Node.js `fs` methods together with additional helpers.
