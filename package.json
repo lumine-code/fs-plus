@@ -32,7 +32,8 @@
     "lumine"
   ],
   "files": [
-    "lib"
+    "lib",
+    "THIRD_PARTY_NOTICES"
   ],
   "devDependencies": {
     "@eslint/js": "^10.0.1",
